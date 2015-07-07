@@ -33,4 +33,6 @@ public:
 	{
 		return MeshComp;
 	}
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

@@ -30,4 +30,8 @@ void ASUsableActor::OnEndFocus()
 	// Used by custom PostProcess to render outlines
 	MeshComp->SetRenderCustomDepth(false);
 }
+void ASUsableActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+}

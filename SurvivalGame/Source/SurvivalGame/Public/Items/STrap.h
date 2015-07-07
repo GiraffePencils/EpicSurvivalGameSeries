@@ -2,12 +2,12 @@
 
 #pragma once
 
-#include "GameFramework/Actor.h"
+#include "SUsableActor.h"
 #include "SCharacter.h"
 #include "STrap.generated.h"
 
 UENUM()
-enum class ETrapState
+enum class ETrapState : uint8
 {
 	Placed,
 	Set,
@@ -15,25 +15,14 @@ enum class ETrapState
 };
 
 UCLASS(ABSTRACT, Blueprintable)
-class SURVIVALGAME_API ASTrap : public AActor
+class SURVIVALGAME_API ASTrap : public ASUsableActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ASTrap();
+	ASTrap(const FObjectInitializer& ObjectInitializer);
 
-
-	UPROPERTY()
-		USceneComponent* OurVisibleComponent;
-
-	UPROPERTY()
-		UStaticMeshComponent* SphereVisual;
-
-	UPROPERTY()
-		UMaterial* trapColour;
-
-	UMaterialInstanceDynamic* MatDynamic;
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -41,18 +30,20 @@ public:
 	// Called every frame
 	virtual void Tick( float DeltaSeconds ) override;
 
-	//Create the the containers for the base trap class
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trap Properties")
-		bool isActive;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trap Properties")
-		bool wasSet;
+	/* Called when player interacts with object */
+	virtual void OnUsed(APawn* InstigatorPawn);
 
 	UPROPERTY(EditAnywhere, Category = "Trap Properties")
 		float trapRadius;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trap Properties")
-		float trapState;
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Trap Properties")
+		ETrapState trapState;
+
+	UPROPERTY(Replicated)
+		UMaterialInstanceDynamic* MatDynamic;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Flag)
+		uint32 bFlag : 1;
 
 	//Function to be called on overlap
 	UFUNCTION()
@@ -63,11 +54,24 @@ public:
 		void OnOverlapEnd(AActor* OtherActor);
 
 	//Function to Set the trap
-	UFUNCTION(BlueprintCallable, Category = "Trap Commands")
-		virtual void SetTrap(AActor* OtherActor);
+	virtual void SetTrap(AActor* OtherActor);
+
+	virtual void UpdateTrapState(ETrapState newState);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerUpdateTrapState(ETrapState newState);
+
+	virtual void ServerUpdateTrapState_Implementation(ETrapState newState);
+
+	virtual bool ServerUpdateTrapState_Validate(ETrapState newState);
 
 	TSubclassOf<class ATrap> TrapClass;
 
-	
+	UFUNCTION()
+		void OnRep_Flag();
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+
 	
 };
