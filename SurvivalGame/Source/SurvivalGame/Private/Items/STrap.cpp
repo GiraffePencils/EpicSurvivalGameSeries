@@ -20,6 +20,7 @@ ASTrap::ASTrap(const FObjectInitializer& ObjectInitializer)
 	OnActorBeginOverlap.AddDynamic(this, &ASTrap::OnOverlap);
 	OnActorEndOverlap.AddDynamic(this, &ASTrap::OnOverlapEnd);
 
+	//Input = TEXT("InputColour");
 	
 	bReplicates = true;
 
@@ -35,7 +36,7 @@ void ASTrap::BeginPlay()
 		MatDynamic = MeshComp->CreateAndSetMaterialInstanceDynamic(0);
 	}
 	
-	UpdateTrapState(ETrapState::Placed);
+	OnRep_UpdateTrapState(ETrapState::Placed);
 
 
 }
@@ -47,16 +48,16 @@ void ASTrap::Tick(float DeltaTime)
 void ASTrap::OnUsed(APawn* InstigatorPawn)
 {
 	Super::OnUsed(InstigatorPawn);
-
 		SetTrap(InstigatorPawn);
 }
 
 //Do something with the other actor.
 void ASTrap::OnOverlap(AActor* OtherActor)
 {
-	if (trapState==ETrapState::Set)
+	
+	if (trapState == ETrapState::Set)
 	{
-		UpdateTrapState(ETrapState::Sprung);
+		OnRep_UpdateTrapState(ETrapState::Sprung);
 	}
 
 }
@@ -68,16 +69,15 @@ void ASTrap::OnOverlapEnd(AActor* OtherActor)
 }
 
 void ASTrap::SetTrap(AActor* OtherActor)
-{
-
+{		
 	if (trapState == ETrapState::Placed)
 	{
-		UpdateTrapState(ETrapState::Set);
+		OnRep_UpdateTrapState(ETrapState::Set);
 	}
 	
 }
 
-void ASTrap::UpdateTrapState(ETrapState newState)
+void ASTrap::OnRep_UpdateTrapState(ETrapState newState)
 {
 	trapState = newState;
 
@@ -87,21 +87,21 @@ void ASTrap::UpdateTrapState(ETrapState newState)
 		if (MatDynamic)
 		{
 			GEngine->AddOnScreenDebugMessage(5, 5.0f, FColor::Blue, (Role == ROLE_Authority) ? TEXT("Auth") : TEXT("Client"));
-			MatDynamic->SetVectorParameterValue("InputColor", FVector(0.0f, 0.0f, 1.0f));
+			MatDynamic->SetVectorParameterValue("InputColour", FVector(0.0f, 0.0f, 1.0f));
 		}
 		break;
 	case ETrapState::Set:
 		if (MatDynamic)
 		{
 			GEngine->AddOnScreenDebugMessage(5, 5.0f, FColor::Blue, (Role == ROLE_Authority) ? TEXT("Auth") : TEXT("Client"));
-			MatDynamic->SetVectorParameterValue("InputColor", FVector(0.0f, 1.0f, 0.0f));
+			MatDynamic->SetVectorParameterValue("InputColour", FVector(0.0f, 1.0f, 0.0f));
 		}
 		break;
 	case ETrapState::Sprung:
 		if (MatDynamic)
 		{
 			GEngine->AddOnScreenDebugMessage(5, 5.0f, FColor::Blue, (Role == ROLE_Authority) ? TEXT("Auth") : TEXT("Client"));
-			MatDynamic->SetVectorParameterValue("InputColor", FVector(1.0f, 0.0f, 0.0f));
+			MatDynamic->SetVectorParameterValue("InputColour", FVector(1.0f, 0.0f, 0.0f));
 		}
 		break;
 	default:
@@ -114,16 +114,10 @@ void ASTrap::UpdateTrapState(ETrapState newState)
 	}
 }
 
-void ASTrap::OnRep_Flag()
-{
-	// When this is called, bFlag already contains the new value. This
-	// just notifies you when it changes.
-	UpdateTrapState(trapState);
-}
 
 void ASTrap::ServerUpdateTrapState_Implementation(ETrapState newState)
 {
-	UpdateTrapState(newState);
+	OnRep_UpdateTrapState(newState);
 }
 
 bool ASTrap::ServerUpdateTrapState_Validate(ETrapState newState)
@@ -137,5 +131,4 @@ void ASTrap::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimePr
 
 	DOREPLIFETIME(ASTrap, trapState);
 	DOREPLIFETIME(ASTrap, MatDynamic);
-	DOREPLIFETIME(ASTrap, bFlag);
 }

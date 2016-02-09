@@ -23,7 +23,6 @@ public:
 	// Sets default values for this actor's properties
 	ASTrap(const FObjectInitializer& ObjectInitializer);
 
-
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	
@@ -36,16 +35,13 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Trap Properties")
 		float trapRadius;
 
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Trap Properties")
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_UpdateTrapState)
 		ETrapState trapState;
 
 	UPROPERTY(Replicated)
 		UMaterialInstanceDynamic* MatDynamic;
 
-	UPROPERTY(ReplicatedUsing = OnRep_Flag)
-		uint32 bFlag : 1;
-
-	//Function to be called on overlap
+		//Function to be called on overlap
 	UFUNCTION()
 		void OnOverlap(AActor* OtherActor);
 
@@ -55,8 +51,8 @@ public:
 
 	//Function to Set the trap
 	virtual void SetTrap(AActor* OtherActor);
-
-	virtual void UpdateTrapState(ETrapState newState);
+	UFUNCTION()
+	virtual void OnRep_UpdateTrapState(ETrapState newState);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerUpdateTrapState(ETrapState newState);
@@ -66,9 +62,6 @@ public:
 	virtual bool ServerUpdateTrapState_Validate(ETrapState newState);
 
 	TSubclassOf<class ATrap> TrapClass;
-
-	UFUNCTION()
-		void OnRep_Flag();
 
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
